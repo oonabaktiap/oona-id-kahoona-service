@@ -1,2 +1,5 @@
 
 /node_modules
+/.aws-sam
+/kahoona-service/dist
+/kahoona-service/node_modules
