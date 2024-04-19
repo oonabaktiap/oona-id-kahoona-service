@@ -56,5 +56,5 @@ async function handleError(error: any) {
     }
 }
 
-export const commonService = loggingAspectFunction(restApiCall, "restApiCall");
+export const restApiCallFn = loggingAspectFunction(restApiCall, "restApiCall");
 

@@ -17,6 +17,13 @@ Globals:
   Api:
     TracingEnabled: true
 Resources:
+  MyLayer:
+        Type: AWS::Serverless::LayerVersion
+        Properties:
+            ContentUri: oona-id-common-lambda-layers/
+            RetentionPolicy: Retain
+            CompatibleRuntimes:
+                - nodejs20.x
   DecryptFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -50,13 +57,7 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - KahoonaServiceApp.ts
-  MyLayer:
-        Type: 'AWS::Serverless::LayerVersion'
-        Properties:
-            ContentUri: ../../oona-id-common-lambda-layers/
-            RetentionPolicy: Retain
-            CompatibleRuntimes:
-                - nodejs20.x
+  
   # HelloWorldFunction:
   #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
   #   Properties:

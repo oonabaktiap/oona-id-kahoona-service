@@ -4,11 +4,16 @@ import { Handler } from 'aws-lambda';
 import { BaseResponse } from 'src/dto/oona.base.response.dto';
 import { createLogger } from '/opt/nodejs/loggerUtil';
 import { getListOfParameterStoreService } from '/opt/nodejs/parameter-store';
-import { commonService } from 'src/service/kahoona-common.service';
+import { restApiCallFn } from 'src/service/kahoona-common.service';
 import { httpMethodEnum } from 'src/enum/http-method.enum';
 import { CommonRestCallDto } from 'src/dto/common-rest-call.dto';
-import { DecryptRequestDto } from 'src/dto/decrypt.request.dto';
+import { DecryptRequestDto } from 'src/dto/request/decrypt-request.dto';
 import { ApiRequestPayload } from 'src/dto/common-api-request-payload.dto';
+import { QuickQuoteRequestDto } from 'src/dto/request/quick-quote-request.dto';
+import { FullQuoteRequestDto } from 'src/dto/request/full-quote-request.dto';
+import { SyncPaymentRequestDto } from 'src/dto/request/sync-payment-request.dto';
+import { SyncPolicyRequestDto } from 'src/dto/request/sync-policy-request.dto';
+import { createEventFn } from 'src/service/event-bridge-common.service';
 
 
 const logger = createLogger();
@@ -20,9 +25,16 @@ interface KahoonaApiDetails {
 }
 
 const KAHOONA_SSM_PARAMETER_PATH = process.env.KAHOONA_SSM_PARAMETER_PATH;
+const KAHOONA_BASE_URL = process.env.KAHOONA_BASE_URL;
 
 const URL_PATH_CONSTANTS = {
     DECRYPT_SVC_CONTEXT_PATH: process.env.DECRYPT_SVC_CONTEXT_PATH,
+
+    DECRYPT_SVC_ENDPOINT: process.env.DECRYPT_SVC_ENDPOINT,
+    QUICK_QUOTE_SVC_ENDPOINT: process.env.QUICK_QUOTE_SVC_ENDPOINT,
+    FULL_QUOTE_SVC_ENDPOINT: process.env.FULL_QUOTE_SVC_ENDPOINT,
+    SYNC_PAYMENT_SVC_ENDPOINT: process.env.SYNC_PAYMENT_SVC_ENDPOINT,
+    SYNC_POLICY_SVC_ENDPOINT: process.env.SYNC_POLICY_SVC_ENDPOINT,
 }
 
 
@@ -71,18 +83,21 @@ export const decryptHandler: Handler = async (event) => {
         const decryptRequest = new DecryptRequestDto();
         decryptRequest.encryptedData = event.body?.encryptedData;
 
-        const apiRequestPayload = new ApiRequestPayload();
-        apiRequestPayload.requestId = event.body?.request_id;
-        apiRequestPayload.correlationId = event.body?.correlation_id;
-        apiRequestPayload.portal = event.body?.portal;
-        apiRequestPayload.apiRequest = decryptRequest;
+        const apiRequestPayload = await createApiRequestPayload(
+            event.body?.request_id,
+            event.body?.correlation_id,
+            event.body?.portal,
+            decryptRequest);
+        logger.info(`request payload : ${JSON.stringify(apiRequestPayload)}`);
 
         const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
         commonRestCallDto.requestPayload = apiRequestPayload;
         commonRestCallDto.method = httpMethodEnum.POST;
-        commonRestCallDto.endpointUrl = URL_PATH_CONSTANTS.DECRYPT_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.DECRYPT_SVC_CONTEXT_PATH : "";
+        const decryptEndpoint = URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
+        // const baseUrl = URL_PATH_CONSTANTS.DECRYPT_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.DECRYPT_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
+        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + decryptEndpoint;
 
-        const apiCallResponse = await commonService(kahoonaHttpClient, commonRestCallDto);
+        const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
         const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
         return response;
     } catch (err) {
@@ -90,6 +105,152 @@ export const decryptHandler: Handler = async (event) => {
         const response = await responseBodyFormat(500, "Internal Server Error");
         return response;
     }
+}
+
+export const quickQuoteHandler: Handler = async (event) => {
+    try {
+        logger.info("Request Event ", event);
+        if (!cachedKahoonaApiDetails) {
+            await apiCallInitialization();
+        }
+        const quickQuoteRequest = new QuickQuoteRequestDto();
+        //fill in request payload here
+
+        const apiRequestPayload = await createApiRequestPayload(
+            event.body?.request_id,
+            event.body?.correlation_id,
+            event.body?.portal,
+            quickQuoteRequest);
+        logger.info(`request payload : ${JSON.stringify(apiRequestPayload)}`);
+
+        const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
+        commonRestCallDto.requestPayload = apiRequestPayload;
+        commonRestCallDto.method = httpMethodEnum.POST;
+        const quickQuoteEndpoint = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_ENDPOINT ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_ENDPOINT : "";
+        // const baseUrl = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
+        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + quickQuoteEndpoint;
+
+        const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
+        
+        const eventBridgeBody = {
+            key: "value",
+        }
+        const eventBridgeResponse = await createEventFn(eventBridgeBody)
+
+        //TODO check both response from rest API and eventbridge.
+        const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
+        return response;
+    } catch (err) {
+        logger.info(`Error ${err}`);
+        const response = await responseBodyFormat(500, "Internal Server Error");
+        return response;
+    }
+}
+
+export const fullQuoteHandler: Handler = async (event) => {
+    try {
+        logger.info("Request Event ", event);
+        if (!cachedKahoonaApiDetails) {
+            await apiCallInitialization();
+        }
+        const fullQuoteRequestDto = new FullQuoteRequestDto();
+        //fill in request payload here
+
+        const apiRequestPayload = await createApiRequestPayload(
+            event.body?.request_id,
+            event.body?.correlation_id,
+            event.body?.portal,
+            fullQuoteRequestDto);
+        logger.info(`request payload : ${JSON.stringify(apiRequestPayload)}`);
+
+        const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
+        commonRestCallDto.method = httpMethodEnum.POST;
+        const fullQuoteEndpoint = URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT ? URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT : "";
+        // const baseUrl = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
+        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + fullQuoteEndpoint;
+
+        const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
+        const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
+        return response;
+    } catch (err) {
+        logger.info(`Error ${err}`);
+        const response = await responseBodyFormat(500, "Internal Server Error");
+        return response;
+    }
+}
+
+export const syncPayment: Handler = async (event) => {
+    try {
+        logger.info("Request Event ", event);
+        if (!cachedKahoonaApiDetails) {
+            await apiCallInitialization();
+        }
+        const syncPaymentRequestDto = new SyncPaymentRequestDto();
+        //fill in request payload here
+
+        const apiRequestPayload = await createApiRequestPayload(
+            event.body?.request_id,
+            event.body?.correlation_id,
+            event.body?.portal,
+            syncPaymentRequestDto);
+        logger.info(`request payload : ${JSON.stringify(apiRequestPayload)}`);
+
+        const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
+        commonRestCallDto.method = httpMethodEnum.POST;
+        const fullQuoteEndpoint = URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT ? URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT : "";
+        // const baseUrl = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
+        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + fullQuoteEndpoint;
+
+        const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
+        const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
+        return response;
+    } catch (err) {
+        logger.info(`Error ${err}`);
+        const response = await responseBodyFormat(500, "Internal Server Error");
+        return response;
+    }
+}
+
+export const syncPolicyHandler: Handler = async (event) => {
+    try {
+        logger.info("Request Event ", event);
+        if (!cachedKahoonaApiDetails) {
+            await apiCallInitialization();
+        }
+        const syncPolicyRequestDto = new SyncPolicyRequestDto();
+        //fill in request payload here
+
+        const apiRequestPayload = await createApiRequestPayload(
+            event.body?.request_id,
+            event.body?.correlation_id,
+            event.body?.portal,
+            syncPolicyRequestDto);
+        logger.info(`request payload : ${JSON.stringify(apiRequestPayload)}`);
+
+        const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
+        commonRestCallDto.method = httpMethodEnum.POST;
+        const fullQuoteEndpoint = URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT ? URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT : "";
+        // const baseUrl = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
+        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + fullQuoteEndpoint;
+
+        const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
+        const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
+        return response;
+    } catch (err) {
+        logger.info(`Error ${err}`);
+        const response = await responseBodyFormat(500, "Internal Server Error");
+        return response;
+    }
+}
+
+async function createApiRequestPayload(requestId: any, correlationId: any, portal: any, apiRequest: any) {
+    const apiRequestPayload = new ApiRequestPayload();
+    apiRequestPayload.requestId = requestId;
+    apiRequestPayload.correlationId = correlationId;
+    apiRequestPayload.portal = portal;
+    apiRequestPayload.apiRequest = apiRequest;
+
+    return apiRequestPayload;
 }
 
 
