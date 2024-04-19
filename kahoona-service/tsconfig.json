@@ -13,9 +13,9 @@
         "baseUrl": ".",
         "paths": {
             "/opt/nodejs/*": [
-                "../oona-id-common-lambda-layers/http-client-layer/*",
-                "../oona-id-common-lambda-layers/logs-layer/*",
-                "../oona-id-common-lambda-layers/ssm-secret-layer/*"
+                "../../oona-id-common-lambda-layers/http-client-layer/*",
+                "../../oona-id-common-lambda-layers/logs-layer/*",
+                "../../oona-id-common-lambda-layers/ssm-secret-layer/*"
             ]
         },
     },
