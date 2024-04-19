@@ -4,7 +4,6 @@ import { Handler } from 'aws-lambda';
 import { BaseResponse } from 'src/dto/oona.base.response.dto';
 import { createLogger } from '/opt/nodejs/loggerUtil';
 import { getListOfParameterStoreService } from '/opt/nodejs/parameter-store';
-import { restApiCallFn } from 'src/service/kahoona-common.service';
 import { httpMethodEnum } from 'src/enum/http-method.enum';
 import { CommonRestCallDto } from 'src/dto/common-rest-call.dto';
 import { DecryptRequestDto } from 'src/dto/request/decrypt-request.dto';
@@ -14,6 +13,7 @@ import { FullQuoteRequestDto } from 'src/dto/request/full-quote-request.dto';
 import { SyncPaymentRequestDto } from 'src/dto/request/sync-payment-request.dto';
 import { SyncPolicyRequestDto } from 'src/dto/request/sync-policy-request.dto';
 import { createEventFn } from 'src/service/event-bridge-common.service';
+import { restApiCallFn } from 'src/service/kahoona-common.service';
 
 
 const logger = createLogger();
