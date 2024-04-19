@@ -1,0 +1,186 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Oona Kahoona Decrypt Service",
+        "description": "Decrypt service calls from API GW to Kahoona using Lambda",
+        "contact": {
+            "email": "bakti.apriliansyah@oona-insurance.co.id"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://virtserver.swaggerhub.com/BAKTIAPRILIANSYAH/oona-kahoona-decrypt-svc/1.0.0",
+            "description": "SwaggerHub API Auto Mocking"
+        }
+    ],
+    "paths": {
+        "/kahoona/decrypt": {
+            "post": {
+                "summary": "calls Kahoona decrypt API",
+                "description": "calls Kahoona decrypt API",
+                "operationId": "decrypt",
+                "requestBody": {
+                    "description": "ecnrypted value to decrypt",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DecryptRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful decrypt",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse"
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BaseResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "ecnrypted data must not be empty or null"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "DecryptRequest": {
+                "required": [
+                    "encryptedData"
+                ],
+                "type": "object",
+                "properties": {
+                    "encryptedData": {
+                        "type": "string",
+                        "example": "xyzabc"
+                    }
+                }
+            },
+            "Data": {
+                "type": "object",
+                "properties": {
+                    "redirect": {
+                        "$ref": "#/components/schemas/Redirect"
+                    },
+                    "agent": {
+                        "$ref": "#/components/schemas/Agent"
+                    },
+                    "customer": {
+                        "$ref": "#/components/schemas/Customer"
+                    }
+                }
+            },
+            "Redirect": {
+                "type": "object",
+                "properties": {
+                    "product": {
+                        "type": "string",
+                        "example": "CI"
+                    },
+                    "coverage": {
+                        "type": "string",
+                        "example": "cancer/stroke/heartattack/big3"
+                    },
+                    "deeplink": {
+                        "type": "string",
+                        "example": "null/payment/policy/fullquote/quickquote"
+                    },
+                    "sdRefId": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "promo": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "discountPct": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "workflow": {
+                        "type": "string",
+                        "example": "agent/customer/sales"
+                    }
+                }
+            },
+            "Agent": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "L1Agent": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "L1CommissionRate": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "L2Agent": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "L2CommissionRate": {
+                        "type": "string",
+                        "example": ""
+                    },
+                    "commissionRate": {
+                        "type": "string",
+                        "example": "30"
+                    }
+                }
+            },
+            "Customer": {
+                "type": "object",
+                "properties": {
+                    "mobileNo": {
+                        "type": "string",
+                        "example": "+628123456789"
+                    }
+                }
+            },
+            "BaseResponse": {
+                "type": "object",
+                "properties": {
+                    "statusCode": {
+                        "type": "string",
+                        "example": "0"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "success"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Data"
+                    }
+                }
+            }
+        }
+    }
+}

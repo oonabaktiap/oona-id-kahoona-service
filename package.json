@@ -1,0 +1,51 @@
+{
+  "name": "oona-id-kahoona-svc",
+  "version": "1.0.0",
+  "description": "ona-id-kahoona-svc",
+  "main": "KahoonaServiceApp.js",
+  "author": "baktiap",
+  "license": "MIT",
+  "scripts": {
+    "unit": "jest",
+    "lint": "eslint '*.ts' --quiet --fix",
+    "compile": "tsc",
+    "test": "npm run compile && npm run unit",
+    "test:cov": "npm --prefix ./kahoona-service run test:cov",
+    "build": "tsc",
+    "migrate:generate": "npm --prefix ./kahoona-service run migrate:generate",
+    "migrate:up": "npm --prefix ./kahoona-service run migrate:up",
+    "migrate:down": "npm --prefix ./kahoona-service run migrate:down"
+  },
+  "dependencies": {
+    "@types/pg": "^8.11.4",
+    "@aws-lambda-powertools/logger": "^2.0.2",
+    "@aws-lambda-powertools/parameters": "^2.0.2",
+    "@aws-sdk/client-secrets-manager": "^3.529.1",
+    "@aws-sdk/client-ssm": "^3.529.1",
+    "pg": "^8.11.3",
+    "aws-lambda": "^1.0.7",
+    "aws-sdk": "^2.1572.0",
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.5",
+    "esbuild": "^0.14.14",
+    "handlebars": "^4.7.8",
+    "reflect-metadata": "^0.2.1",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.92",
+    "@types/handlebars": "^4.1.0",
+    "@types/jest": "^29.2.0",
+    "@types/node": "^20.5.7",
+    "@typescript-eslint/eslint-plugin": "^5.10.2",
+    "@typescript-eslint/parser": "^5.10.2",
+    "eslint": "^8.8.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^29.2.1",
+    "prettier": "^2.5.1",
+    "ts-jest": "^29.0.5",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.4"
+  }
+}

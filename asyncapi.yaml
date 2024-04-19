@@ -1,0 +1,27 @@
+asyncapi: 3.0.0
+info:
+  title: Oona Kahoona Decrypt Service
+  version: 1.0.0
+  description: This calls Kahoona Decrypt Service from Lambda
+channels:
+  decryptChannel:
+    address: kahoona/decrypt
+    messages:
+      DecryptMessage:
+        $ref: '#/components/messages/DecryptMessage'
+operations:
+  doDecryption:
+    action: send
+    channel:
+      $ref: '#/channels/decryptChannel'
+    messages:
+      - $ref: '#/channels/decryptChannel/messages/DecryptMessage'
+components:
+  messages:
+    DecryptMessage:å
+      payload:
+        type: object
+        properties:
+          encryptedValue:
+            type: string
+            description: Value to be decrypted
