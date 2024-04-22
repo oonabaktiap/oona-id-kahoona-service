@@ -13,7 +13,10 @@ import { FullQuoteRequestDto } from 'src/dto/request/full-quote-request.dto';
 import { SyncPaymentRequestDto } from 'src/dto/request/sync-payment-request.dto';
 import { SyncPolicyRequestDto } from 'src/dto/request/sync-policy-request.dto';
 import { createEventFn } from 'src/service/event-bridge-common.service';
-import { restApiCallFn } from 'src/service/kahoona-common.service';
+import { getApiCallFn, restApiCallFn } from 'src/service/kahoona-common.service';
+import { QuoteDetailsOtherData } from 'src/model/quote-details-other-data.model';
+import { QuoteDetails } from 'src/model/quote-details.model';
+import { Endpoint } from 'aws-sdk';
 
 
 const logger = createLogger();
@@ -73,6 +76,62 @@ const apiCallInitialization = async () => {
  *
  */
 
+export const postHandler: Handler = async (event) => {
+    try {
+        if (event.body) {
+            const eventBody = JSON.parse(event.body);
+            console.log('event.body json object : ', eventBody);
+            const endpointUrl = eventBody.endpointUrl;
+            console.log('into decryptHandler')
+            const apiCallResponse = await getApiCallFn(endpointUrl);
+            if (apiCallResponse) {
+                return {
+                    statusCode: 200,
+                    body: await apiCallResponse.json(),
+                };
+            }
+        }
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                message: 'Internal Server Error',
+            }),
+        };
+    } catch (err) {
+        console.log(err);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                message: 'Internal Server Error',
+            }),
+        };
+    }
+}
+export const getHandler: Handler = async (event) => {
+    try {
+        // logger.info("Request Event ", event);
+        // if (!cachedKahoonaApiDetails) {
+        //     await apiCallInitialization();
+        // }
+        const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
+        commonRestCallDto.method = httpMethodEnum.GET;
+        commonRestCallDto.endpointUrl = 'https://catfact.ninja/fact';
+        const apiCallResponse = await getApiCallFn(commonRestCallDto.endpointUrl);
+        // logger.info(`response = ${apiCallResponse}`)
+        // logger.info(`response = ${apiCallResponse.json()}`)
+
+        const response = await responseBodyFormat(apiCallResponse.status, await apiCallResponse.json());
+        return response;
+    } catch (err) {
+        logger.info(`Error ${err}`);
+        const response = await responseBodyFormat(500, "Internal Server Error");
+        return response;
+    }
+
+
+
+}
+
 
 export const decryptHandler: Handler = async (event) => {
     try {
@@ -114,6 +173,13 @@ export const quickQuoteHandler: Handler = async (event) => {
             await apiCallInitialization();
         }
         const quickQuoteRequest = new QuickQuoteRequestDto();
+        // const otherData: QuoteDetailsOtherData = {
+        //     deepLinkStage: "deepLinkStage",
+        //     isInsuredSmoker: false,
+        //     questionAnswers: [],
+
+        // }
+        // quickQuoteRequest.otherData = otherData;
         //fill in request payload here
 
         const apiRequestPayload = await createApiRequestPayload(
@@ -131,7 +197,7 @@ export const quickQuoteHandler: Handler = async (event) => {
         commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + quickQuoteEndpoint;
 
         const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
-        
+
         const eventBridgeBody = {
             key: "value",
         }
@@ -179,7 +245,7 @@ export const fullQuoteHandler: Handler = async (event) => {
     }
 }
 
-export const syncPayment: Handler = async (event) => {
+export const syncPaymentHandler: Handler = async (event) => {
     try {
         logger.info("Request Event ", event);
         if (!cachedKahoonaApiDetails) {
@@ -291,13 +357,13 @@ async function createApiRequestPayload(requestId: any, correlationId: any, porta
 
 async function responseBodyFormat(statusCode: number, result: any) {
     const responseBody = {} as BaseResponse;
-    if (200 === statusCode) {
-        responseBody.status = STATUS_SUCCESS;
-    } else {
-        responseBody.status = STATUS_FAILURE;
-    }
+    // if (200 === statusCode) {
+    //     responseBody.status = STATUS_SUCCESS;
+    // } else {
+    //     responseBody.status = STATUS_FAILURE;
+    // }
     responseBody.statusCode = statusCode;
-    responseBody.data = result;
+    responseBody.body = result;
 
     logger.info(`Function Response --> `, { RESPONSE: responseBody });
     return responseBody;

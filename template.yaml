@@ -20,7 +20,7 @@ Resources:
   MyLayer:
         Type: AWS::Serverless::LayerVersion
         Properties:
-            ContentUri: oona-id-common-lambda-layers/
+            ContentUri: ../oona-id-common-lambda-layers/
             RetentionPolicy: Retain
             CompatibleRuntimes:
                 - nodejs20.x
@@ -49,6 +49,14 @@ Resources:
           Properties:
             Path: /kahoona/decrypt
             Method: POST
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - KahoonaServiceApp.ts
   QuickQuoteFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -74,7 +82,15 @@ Resources:
           Properties:
             Path: /kahoona/quickQuote
             Method: POST
-    FullQuoteFunction:
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - KahoonaServiceApp.ts
+  FullQuoteFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: kahoona-service/
@@ -97,13 +113,21 @@ Resources:
         Decrypt:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /kahoona/fulLQuote
+            Path: /kahoona/fullQuote
             Method: POST
-    SyncPaymentFunction:
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - KahoonaServiceApp.ts
+  SyncPaymentFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: kahoona-service/
-      Handler: KahoonaServiceApp.syncPayment
+      Handler: KahoonaServiceApp.syncPaymentHandler
       Runtime: nodejs20.x
       Layers: 
           - !Ref MyLayer
@@ -124,11 +148,19 @@ Resources:
           Properties:
             Path: /kahoona/syncPayment
             Method: POST
-    syncPolicyFunction:
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - KahoonaServiceApp.ts
+  SyncPolicyFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: kahoona-service/
-      Handler: KahoonaServiceApp.syncPolicy
+      Handler: KahoonaServiceApp.syncPolicyHandler
       Runtime: nodejs20.x
       Layers: 
           - !Ref MyLayer
@@ -149,7 +181,72 @@ Resources:
           Properties:
             Path: /kahoona/syncPolicy
             Method: POST
-
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - KahoonaServiceApp.ts
+  GetFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: kahoona-service/
+      Handler: KahoonaServiceApp.getHandler
+      Runtime: nodejs20.x
+      Layers: 
+          - !Ref MyLayer
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+          Variables:
+              MAYA_PAYMENT_PARAMETER_STORE_PATH: '/MayaPayment/api'
+              MAYA_PAYMENT_ROOT_URL: 'https://pg-sandbox.paymaya.com'
+              CREATE_CHECKOUT_CONTEXT_PATH: '/checkout/v1/checkouts'
+              AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
+              AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
+              POWERTOOLS_LOG_LEVEL: ERROR,INFO
+      Events:
+        Decrypt:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /kahoona/test/get
+            Method: get
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - KahoonaServiceApp.ts
+  PostFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: kahoona-service/
+      Handler: KahoonaServiceApp.postHandler
+      Runtime: nodejs20.x
+      Layers: 
+          - !Ref MyLayer
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+          Variables:
+              MAYA_PAYMENT_PARAMETER_STORE_PATH: '/MayaPayment/api'
+              MAYA_PAYMENT_ROOT_URL: 'https://pg-sandbox.paymaya.com'
+              CREATE_CHECKOUT_CONTEXT_PATH: '/checkout/v1/checkouts'
+              AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
+              AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
+              POWERTOOLS_LOG_LEVEL: ERROR,INFO
+      Events:
+        Decrypt:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /kahoona/test/post
+            Method: POST
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
