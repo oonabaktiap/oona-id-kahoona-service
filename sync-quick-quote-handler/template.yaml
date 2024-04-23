@@ -37,8 +37,10 @@ Resources:
       MemorySize: 512
       Environment:
           Variables:
-              KAHOONA_BASE_URL: 'https://www.toptal.com'
-              QUICK_QUOTE_SVC_ENDPOINT: '/developers/postbin/api/bin'
+              KAHOONA_BASE_URL: ''
+              # KAHOONA_BASE_URL: 'https://www.toptal.com'
+              # QUICK_QUOTE_SVC_ENDPOINT: '/developers/postbin/api/bin'
+              QUICK_QUOTE_SVC_ENDPOINT: 'sdx-api/secure/aem/sync-quick-quote'
               AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
               AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
               EVENTBUS_SOURCE: 'ci.kahoona.sync.quick.quote'
