@@ -1,8 +1,8 @@
 {
-  "name": "kahoona-decrypt-service",
+  "name": "kahoona-sync-quick-quote-handler",
   "version": "1.0.0",
-  "description": "ahoona-decrypt-service",
-  "main": "KahoonaServiceApp.js",
+  "description": "kahoona-sync-quick-quote-handler",
+  "main": "index.js",
   "repository": "",
   "author": "oona",
   "license": "MIT",

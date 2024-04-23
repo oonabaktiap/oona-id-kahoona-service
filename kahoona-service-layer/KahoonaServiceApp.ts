@@ -3,7 +3,7 @@ import HttpClient from '/opt/nodejs/httpClient';
 import { Handler } from 'aws-lambda';
 import { BaseResponse } from 'src/dto/oona.base.response.dto';
 import { createLogger } from '/opt/nodejs/loggerUtil';
-import { getListOfParameterStoreService } from '/opt/nodejs/parameter-store';
+
 import { httpMethodEnum } from 'src/enum/http-method.enum';
 import { CommonRestCallDto } from 'src/dto/common-rest-call.dto';
 import { DecryptRequestDto } from 'src/dto/request/decrypt-request.dto';
@@ -13,11 +13,9 @@ import { FullQuoteRequestDto } from 'src/dto/request/full-quote-request.dto';
 import { SyncPaymentRequestDto } from 'src/dto/request/sync-payment-request.dto';
 import { SyncPolicyRequestDto } from 'src/dto/request/sync-policy-request.dto';
 import { createEventFn } from 'src/service/event-bridge-common.service';
-import { getApiCallFn, restApiCallFn } from 'src/service/kahoona-common.service';
-import { QuoteDetailsOtherData } from 'src/model/quote-details-other-data.model';
-import { QuoteDetails } from 'src/model/quote-details.model';
-import { Endpoint } from 'aws-sdk';
-
+import { restApiCallFn, } from 'src/service/kahoona-common.service';
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const logger = createLogger();
 
@@ -28,17 +26,20 @@ interface KahoonaApiDetails {
 }
 
 const KAHOONA_SSM_PARAMETER_PATH = process.env.KAHOONA_SSM_PARAMETER_PATH;
-const KAHOONA_BASE_URL = process.env.KAHOONA_BASE_URL;
+// const KAHOONA_BASE_URL = process.env.KAHOONA_BASE_URL;
 
 const URL_PATH_CONSTANTS = {
     DECRYPT_SVC_CONTEXT_PATH: process.env.DECRYPT_SVC_CONTEXT_PATH,
+    KAHOONA_BASE_URL: process.env.KAHOONA_BASE_URL,
 
     DECRYPT_SVC_ENDPOINT: process.env.DECRYPT_SVC_ENDPOINT,
     QUICK_QUOTE_SVC_ENDPOINT: process.env.QUICK_QUOTE_SVC_ENDPOINT,
     FULL_QUOTE_SVC_ENDPOINT: process.env.FULL_QUOTE_SVC_ENDPOINT,
     SYNC_PAYMENT_SVC_ENDPOINT: process.env.SYNC_PAYMENT_SVC_ENDPOINT,
     SYNC_POLICY_SVC_ENDPOINT: process.env.SYNC_POLICY_SVC_ENDPOINT,
+
 }
+
 
 
 const STATUS_SUCCESS = "Success";
@@ -52,12 +53,13 @@ const apiCallInitialization = async () => {
     try {
         // Make an API call during initialization
         if (!cachedKahoonaApiDetails) {
-            const parameterResult = await getListOfParameterStoreService(KAHOONA_SSM_PARAMETER_PATH);
-            logger.info(`cachedParameterValue --> `, { cachedParameterValue: parameterResult });
+            // const parameterResult = await getListOfParameterStoreService(KAHOONA_SSM_PARAMETER_PATH);
+            // logger.info(`cachedParameterValue --> `, { cachedParameterValue: parameterResult });
             cachedKahoonaApiDetails = {} as KahoonaApiDetails;
-            cachedKahoonaApiDetails.API_ROOT_URL = parameterResult?.API_ROOT_URL || '';
-            cachedKahoonaApiDetails.AUTH_USERNAME = parameterResult?.AUTH_USERNAME || '';
-            cachedKahoonaApiDetails.AUTH_PASSWORD = parameterResult?.AUTH_PASSWORD || '';
+            cachedKahoonaApiDetails.API_ROOT_URL = URL_PATH_CONSTANTS.KAHOONA_BASE_URL || '';
+            // cachedKahoonaApiDetails.AUTH_USERNAME = parameterResult?.AUTH_USERNAME || '';
+            // cachedKahoonaApiDetails.AUTH_PASSWORD = parameterResult?.AUTH_PASSWORD || '';
+
 
             kahoonaHttpClient = new HttpClient(cachedKahoonaApiDetails?.API_ROOT_URL);
         }
@@ -76,93 +78,36 @@ const apiCallInitialization = async () => {
  *
  */
 
-export const postHandler: Handler = async (event) => {
-    try {
-        if (event.body) {
-            const eventBody = JSON.parse(event.body);
-            console.log('event.body json object : ', eventBody);
-            const endpointUrl = eventBody.endpointUrl;
-            console.log('into decryptHandler')
-            const apiCallResponse = await getApiCallFn(endpointUrl);
-            if (apiCallResponse) {
-                return {
-                    statusCode: 200,
-                    body: await apiCallResponse.json(),
-                };
-            }
-        }
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                message: 'Internal Server Error',
-            }),
-        };
-    } catch (err) {
-        console.log(err);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                message: 'Internal Server Error',
-            }),
-        };
-    }
-}
-export const getHandler: Handler = async (event) => {
-    try {
-        // logger.info("Request Event ", event);
-        // if (!cachedKahoonaApiDetails) {
-        //     await apiCallInitialization();
-        // }
-        const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
-        commonRestCallDto.method = httpMethodEnum.GET;
-        commonRestCallDto.endpointUrl = 'https://catfact.ninja/fact';
-        const apiCallResponse = await getApiCallFn(commonRestCallDto.endpointUrl);
-        // logger.info(`response = ${apiCallResponse}`)
-        // logger.info(`response = ${apiCallResponse.json()}`)
-
-        const response = await responseBodyFormat(apiCallResponse.status, await apiCallResponse.json());
-        return response;
-    } catch (err) {
-        logger.info(`Error ${err}`);
-        const response = await responseBodyFormat(500, "Internal Server Error");
-        return response;
-    }
-
-
-
-}
-
-
 export const decryptHandler: Handler = async (event) => {
+    let apiCallResponse;
     try {
         logger.info("Request Event ", event);
         if (!cachedKahoonaApiDetails) {
             await apiCallInitialization();
         }
         const decryptRequest = new DecryptRequestDto();
-        decryptRequest.encryptedData = event.body?.encryptedData;
+        decryptRequest.encryptedData = event.body?.apiReaquest?.encryptedData;
 
-        const apiRequestPayload = await createApiRequestPayload(
-            event.body?.request_id,
-            event.body?.correlation_id,
-            event.body?.portal,
-            decryptRequest);
-        logger.info(`request payload : ${JSON.stringify(apiRequestPayload)}`);
+        const apiRequestPayload: ApiRequestPayload = event.body;
+        // const apiRequestPayload = await createApiRequestPayload(
+        //     event.body?.request_id,
+        //     event.body?.correlation_id,
+        //     event.body?.portal,
+        //     decryptRequest);
+        // logger.info(`request payload : ${apiRequestPayload}`);
+        // console.log(`request payload : ${apiRequestPayload}`);
 
         const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
         commonRestCallDto.requestPayload = apiRequestPayload;
         commonRestCallDto.method = httpMethodEnum.POST;
         const decryptEndpoint = URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
-        // const baseUrl = URL_PATH_CONSTANTS.DECRYPT_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.DECRYPT_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
-        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + decryptEndpoint;
-
-        const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
-        const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
-        return response;
+        commonRestCallDto.endpointUrl = decryptEndpoint;
+        apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
+        return apiCallResponse;
     } catch (err) {
         logger.info(`Error ${err}`);
-        const response = await responseBodyFormat(500, "Internal Server Error");
-        return response;
+        const apiCallResponse = await responseBodyFormat(500, "Internal Server Error");
+        return apiCallResponse;
     }
 }
 
@@ -172,7 +117,8 @@ export const quickQuoteHandler: Handler = async (event) => {
         if (!cachedKahoonaApiDetails) {
             await apiCallInitialization();
         }
-        const quickQuoteRequest = new QuickQuoteRequestDto();
+        const quickQuoteRequest: QuickQuoteRequestDto = JSON.parse(event.body);
+        logger.info(`quickQuoteRequest : ${JSON.stringify(quickQuoteRequest)}`);
         // const otherData: QuoteDetailsOtherData = {
         //     deepLinkStage: "deepLinkStage",
         //     isInsuredSmoker: false,
@@ -183,9 +129,9 @@ export const quickQuoteHandler: Handler = async (event) => {
         //fill in request payload here
 
         const apiRequestPayload = await createApiRequestPayload(
-            event.body?.request_id,
-            event.body?.correlation_id,
-            event.body?.portal,
+            event.body.request_id,
+            event.body.correlation_id,
+            event.body.portal,
             quickQuoteRequest);
         logger.info(`request payload : ${JSON.stringify(apiRequestPayload)}`);
 
@@ -194,18 +140,22 @@ export const quickQuoteHandler: Handler = async (event) => {
         commonRestCallDto.method = httpMethodEnum.POST;
         const quickQuoteEndpoint = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_ENDPOINT ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_ENDPOINT : "";
         // const baseUrl = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
-        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + quickQuoteEndpoint;
+        commonRestCallDto.endpointUrl = quickQuoteEndpoint;
 
         const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
-
-        const eventBridgeBody = {
-            key: "value",
+        // return apiCallResponse;
+        // const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
+        let eventBridgeResponse;
+        if (apiCallResponse.statusCode == 201) {
+            const eventBridgeBody = {
+                journeyId: quickQuoteRequest.sdRefId,
+            }
+            eventBridgeResponse = await createEventFn(eventBridgeBody)
         }
-        const eventBridgeResponse = await createEventFn(eventBridgeBody)
 
-        //TODO check both response from rest API and eventbridge.
-        const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
-        return response;
+        // //TODO check both response from rest API and eventbridge.
+        // //TODO combine the response
+        return eventBridgeResponse;
     } catch (err) {
         logger.info(`Error ${err}`);
         const response = await responseBodyFormat(500, "Internal Server Error");
@@ -233,11 +183,10 @@ export const fullQuoteHandler: Handler = async (event) => {
         commonRestCallDto.method = httpMethodEnum.POST;
         const fullQuoteEndpoint = URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT ? URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT : "";
         // const baseUrl = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
-        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + fullQuoteEndpoint;
+        commonRestCallDto.endpointUrl = fullQuoteEndpoint;
 
         const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
-        const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
-        return response;
+        return apiCallResponse;
     } catch (err) {
         logger.info(`Error ${err}`);
         const response = await responseBodyFormat(500, "Internal Server Error");
@@ -265,11 +214,10 @@ export const syncPaymentHandler: Handler = async (event) => {
         commonRestCallDto.method = httpMethodEnum.POST;
         const fullQuoteEndpoint = URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT ? URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT : "";
         // const baseUrl = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
-        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + fullQuoteEndpoint;
+        commonRestCallDto.endpointUrl = fullQuoteEndpoint;
 
         const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
-        const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
-        return response;
+        return apiCallResponse;
     } catch (err) {
         logger.info(`Error ${err}`);
         const response = await responseBodyFormat(500, "Internal Server Error");
@@ -297,11 +245,10 @@ export const syncPolicyHandler: Handler = async (event) => {
         commonRestCallDto.method = httpMethodEnum.POST;
         const fullQuoteEndpoint = URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT ? URL_PATH_CONSTANTS.FULL_QUOTE_SVC_ENDPOINT : "";
         // const baseUrl = URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH ? URL_PATH_CONSTANTS.QUICK_QUOTE_SVC_CONTEXT_PATH : "" + URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT ? URL_PATH_CONSTANTS.DECRYPT_SVC_ENDPOINT : "";
-        commonRestCallDto.endpointUrl = KAHOONA_BASE_URL + '/' + fullQuoteEndpoint;
+        commonRestCallDto.endpointUrl = fullQuoteEndpoint;
 
         const apiCallResponse = await restApiCallFn(kahoonaHttpClient, commonRestCallDto);
-        const response = await responseBodyFormat(apiCallResponse?.statusCode, apiCallResponse?.result);
-        return response;
+        return apiCallResponse;
     } catch (err) {
         logger.info(`Error ${err}`);
         const response = await responseBodyFormat(500, "Internal Server Error");
@@ -319,52 +266,11 @@ async function createApiRequestPayload(requestId: any, correlationId: any, porta
     return apiRequestPayload;
 }
 
-
-
-
-// async function decryptFunc(event: APIGatewayProxyEvent) {
-//     if (event.body) {
-//         const requestPayload: DecryptRequestDto = JSON.parse(event.body);
-//         console.log('event.body json object : ', requestPayload);
-//         const response = await decrypt(requestPayload);
-
-//         const baseResponse = new BaseResponse();
-//         if (response) {
-//             baseResponse.code = HttpStatusCode.Ok;
-//             baseResponse.status = 'success';
-//             baseResponse.data = JSON.stringify(baseResponse);
-//             baseResponse.message = "decypt successful"
-//         } else {
-//             baseResponse.code = -1;
-//             baseResponse.status = 'failed';
-//             baseResponse.message = "failed calling kahoona decrypt"
-//         }
-//         return {
-//             statusCode: 200,
-//             body: JSON.stringify({
-//                 baseResponse,
-//             }),
-//         };
-//     }
-//     return {
-//         statusCode: 500,
-//         body: JSON.stringify({
-//             message: 'body not found',
-//         }),
-//     };
-// }
-
-
 async function responseBodyFormat(statusCode: number, result: any) {
     const responseBody = {} as BaseResponse;
-    // if (200 === statusCode) {
-    //     responseBody.status = STATUS_SUCCESS;
-    // } else {
-    //     responseBody.status = STATUS_FAILURE;
-    // }
     responseBody.statusCode = statusCode;
     responseBody.body = result;
-
-    logger.info(`Function Response --> `, { RESPONSE: responseBody });
+    logger.info(`Function Response-- > `, { RESPONSE: responseBody });
     return responseBody;
 }
+

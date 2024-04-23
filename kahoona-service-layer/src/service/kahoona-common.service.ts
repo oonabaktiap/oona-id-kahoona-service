@@ -5,6 +5,7 @@ import { CommonRestCallDto } from "src/dto/common-rest-call.dto";
 import { httpMethodEnum } from 'src/enum/http-method.enum';
 import { BaseResponse } from 'src/dto/oona.base.response.dto';
 import { createLogger } from '/opt/nodejs/loggerUtil';
+import { v4 as uuidv4 } from 'uuid';
 
 const logger = createLogger();
 
@@ -26,19 +27,25 @@ const getApiCall = async (endpointUrl: string): Promise<Response> => {
 
 const restApiCall = async (httpClient: HttpClient, commonRestCallDto: CommonRestCallDto): Promise<any> => {
     try {
-        logger.info(`httpClient = ${httpClient}`)
-        logger.info(`incoming request = ${JSON.stringify(commonRestCallDto)}`)
+        // logger.info(`httpClient = ${httpClient}`)
+        // logger.info(`incoming request = ${commonRestCallDto}`)
+        let response: any;
         if (commonRestCallDto) {
             const endpointUrl = commonRestCallDto.endpointUrl;
+            // console.log(`endpointUrl : ${endpointUrl}`)
             const httpMethod = commonRestCallDto.method;
-            const requestPayload = commonRestCallDto?.requestPayload;
-            let response: any;
+            // console.log(`httpMethod : ${httpMethod}`)
+            const requestPayload = commonRestCallDto.requestPayload;
+            // logger.info(`requestPayload : ${requestPayload}`)
+            // logger.info(`requestPayload.requestId : ${requestPayload.requestId}`)
             if (httpMethod == httpMethodEnum.GET) {
-                logger.info('into GET call')
+                // logger.info('into GET call')
                 response = await httpClient.get<any>(`${endpointUrl}`);
+                // console.log(`response : ${JSON.stringify(response)}`)
             } else if (httpMethod == httpMethodEnum.POST) {
-                logger.info('into POST call')
+                // logger.info('into POST call')
                 response = await httpClient.post<any>(`${endpointUrl}`, requestPayload);
+
             }
             else if (httpMethod == httpMethodEnum.DELETE) {
                 //TODO
@@ -46,20 +53,28 @@ const restApiCall = async (httpClient: HttpClient, commonRestCallDto: CommonRest
             else if (httpMethod == httpMethodEnum.PUT) {
                 //TODO
             }
-            return await apiResponseObjectFormat(response?.status, response?.data);
+            return await apiResponseObjectFormat(response?.status, response?.data, requestPayload?.requestId);
+        } else {
+            return await apiResponseObjectFormat(400, 'payload undefined', '');
         }
-
     } catch (error) {
         return await handleError(error);
     }
-    return null;
 }
 
-async function apiResponseObjectFormat(statusCode: number, data?: any | undefined) {
-    const response = {} as BaseResponse;
-    response.statusCode = statusCode;
-    response.data = data;
+async function apiResponseObjectFormat(statusCodeParam: number, dataParam: any, requestIdParam: string) {
+    const body = {} as BaseResponse;
+    body.uuid = uuidv4();
+    body.statusCode = 0;
+    body.data = dataParam;
+    body.requestId = requestIdParam;
+    if (statusCodeParam && statusCodeParam >= 200 && statusCodeParam <= 299)
+        body.status = 'success'
 
+    const response = {
+        body: body,
+        statusCode: statusCodeParam
+    }
     return response;
 }
 
@@ -67,15 +82,15 @@ async function handleError(error: any) {
     if (axios.isAxiosError(error)) {
         if (error.response) {
             // The request was made, but the server responded with a non-2xx status code
-            return await apiResponseObjectFormat(500, error?.response?.data);
+            return await apiResponseObjectFormat(500, error?.response?.data, '');
         } else if (error.request) {
             // The request was made but no response was received
-            return await apiResponseObjectFormat(500, error?.message);
+            return await apiResponseObjectFormat(500, error?.message, '');
         } else {
-            return await apiResponseObjectFormat(500, error?.message);
+            return await apiResponseObjectFormat(500, error?.message, '');
         }
     } else {
-        return await apiResponseObjectFormat(500, error);
+        return await apiResponseObjectFormat(500, error, '');
     }
 }
 

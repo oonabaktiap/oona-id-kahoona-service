@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  oona-kahoona-decrypt-svc
+
+  Lambda function for kahoona decrypting service
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 30
+
+    Tracing: Active
+    # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
+    LoggingConfig:
+      LogFormat: JSON
+  Api:
+    TracingEnabled: true
+Resources:
+  KahoonaServiceLayer:
+        Type: AWS::Serverless::LayerVersion
+        Properties:
+            ContentUri: ../kahoona-service-layer/
+            RetentionPolicy: Retain
+            CompatibleRuntimes:
+                - nodejs20.x
+  SyncQuickQuoteFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      # CodeUri: kahoona-service/
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Layers: 
+          - !Ref KahoonaServiceLayer
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+          Variables:
+              KAHOONA_BASE_URL: 'https://www.toptal.com'
+              SYNC_POLICY_SVC_ENDPOINT: '/developers/postbin/api/bin'
+              # SYNC_POLICY_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-policy'
+              AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
+              AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
+              POWERTOOLS_LOG_LEVEL: ERROR,INFO
+      Events:
+        Decrypt:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /kahoona/syncPolicy
+            Method: POST
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - index.ts
+
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: "true"
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  # HelloWorldApi:
+  #   Description: API Gateway endpoint URL for Prod stage for Hello World function
+  #   Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+
+  # HelloWorldFunction:
+  #   Description: Hello World Lambda Function ARN
+  #   Value: !GetAtt HelloWorldFunction.Arn
+  # BaseInsertFunction:
+  #   Description: Base Inert Lambda Function ARN
+  #   Value: !PostAtt BaseInsertFunction.Arn
+
+  # HelloWorldFunctionIamRole:
+  #   Description: Implicit IAM Role created for Hello World function
+  #   Value: !GetAtt HelloWorldFunctionRole.Arn

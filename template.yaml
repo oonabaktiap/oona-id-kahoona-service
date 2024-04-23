@@ -37,9 +37,8 @@ Resources:
       MemorySize: 512
       Environment:
           Variables:
-              MAYA_PAYMENT_PARAMETER_STORE_PATH: '/MayaPayment/api'
-              MAYA_PAYMENT_ROOT_URL: 'https://pg-sandbox.paymaya.com'
-              CREATE_CHECKOUT_CONTEXT_PATH: '/checkout/v1/checkouts'
+              KAHOONA_BASE_URL: 'https://www.toptal.com'
+              DECRYPT_SVC_ENDPOINT: '/developers/postbin/api/bin'
               AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
               AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
               POWERTOOLS_LOG_LEVEL: ERROR,INFO
@@ -70,12 +69,15 @@ Resources:
       MemorySize: 512
       Environment:
           Variables:
-              MAYA_PAYMENT_PARAMETER_STORE_PATH: '/MayaPayment/api'
-              MAYA_PAYMENT_ROOT_URL: 'https://pg-sandbox.paymaya.com'
-              CREATE_CHECKOUT_CONTEXT_PATH: '/checkout/v1/checkouts'
+              KAHOONA_BASE_URL: 'https://www.toptal.com'
+              # QUICK_QUOTE_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-quick-quote'
+              QUICK_QUOTE_SVC_ENDPOINT: '/developers/postbin/api/bin'
               AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
               AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
               POWERTOOLS_LOG_LEVEL: ERROR,INFO
+              EVENTBUS_SOURCE: 'ci.kahoona.sync.quick.quote'
+              EVENTBUS_DETAIL_TYPE: 'ci.kahoona.sync.quick.quote'
+              EVENTBUS_NAME: 'test-id-kahoona-sync-quick-quote'    
       Events:
         Decrypt:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -90,171 +92,174 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - KahoonaServiceApp.ts
-  FullQuoteFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: kahoona-service/
-      Handler: KahoonaServiceApp.fullQuoteHandler
-      Runtime: nodejs20.x
-      Layers: 
-          - !Ref MyLayer
-      Architectures:
-        - x86_64
-      MemorySize: 512
-      Environment:
-          Variables:
-              MAYA_PAYMENT_PARAMETER_STORE_PATH: '/MayaPayment/api'
-              MAYA_PAYMENT_ROOT_URL: 'https://pg-sandbox.paymaya.com'
-              CREATE_CHECKOUT_CONTEXT_PATH: '/checkout/v1/checkouts'
-              AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
-              AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
-              POWERTOOLS_LOG_LEVEL: ERROR,INFO
-      Events:
-        Decrypt:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /kahoona/fullQuote
-            Method: POST
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2020
-        Sourcemap: true
-        EntryPoints:
-          - KahoonaServiceApp.ts
-  SyncPaymentFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: kahoona-service/
-      Handler: KahoonaServiceApp.syncPaymentHandler
-      Runtime: nodejs20.x
-      Layers: 
-          - !Ref MyLayer
-      Architectures:
-        - x86_64
-      MemorySize: 512
-      Environment:
-          Variables:
-              MAYA_PAYMENT_PARAMETER_STORE_PATH: '/MayaPayment/api'
-              MAYA_PAYMENT_ROOT_URL: 'https://pg-sandbox.paymaya.com'
-              CREATE_CHECKOUT_CONTEXT_PATH: '/checkout/v1/checkouts'
-              AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
-              AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
-              POWERTOOLS_LOG_LEVEL: ERROR,INFO
-      Events:
-        Decrypt:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /kahoona/syncPayment
-            Method: POST
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2020
-        Sourcemap: true
-        EntryPoints:
-          - KahoonaServiceApp.ts
-  SyncPolicyFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: kahoona-service/
-      Handler: KahoonaServiceApp.syncPolicyHandler
-      Runtime: nodejs20.x
-      Layers: 
-          - !Ref MyLayer
-      Architectures:
-        - x86_64
-      MemorySize: 512
-      Environment:
-          Variables:
-              MAYA_PAYMENT_PARAMETER_STORE_PATH: '/MayaPayment/api'
-              MAYA_PAYMENT_ROOT_URL: 'https://pg-sandbox.paymaya.com'
-              CREATE_CHECKOUT_CONTEXT_PATH: '/checkout/v1/checkouts'
-              AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
-              AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
-              POWERTOOLS_LOG_LEVEL: ERROR,INFO
-      Events:
-        Decrypt:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /kahoona/syncPolicy
-            Method: POST
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2020
-        Sourcemap: true
-        EntryPoints:
-          - KahoonaServiceApp.ts
-  GetFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: kahoona-service/
-      Handler: KahoonaServiceApp.getHandler
-      Runtime: nodejs20.x
-      Layers: 
-          - !Ref MyLayer
-      Architectures:
-        - x86_64
-      MemorySize: 512
-      Environment:
-          Variables:
-              MAYA_PAYMENT_PARAMETER_STORE_PATH: '/MayaPayment/api'
-              MAYA_PAYMENT_ROOT_URL: 'https://pg-sandbox.paymaya.com'
-              CREATE_CHECKOUT_CONTEXT_PATH: '/checkout/v1/checkouts'
-              AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
-              AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
-              POWERTOOLS_LOG_LEVEL: ERROR,INFO
-      Events:
-        Decrypt:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /kahoona/test/get
-            Method: get
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2020
-        Sourcemap: true
-        EntryPoints:
-          - KahoonaServiceApp.ts
-  PostFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: kahoona-service/
-      Handler: KahoonaServiceApp.postHandler
-      Runtime: nodejs20.x
-      Layers: 
-          - !Ref MyLayer
-      Architectures:
-        - x86_64
-      MemorySize: 512
-      Environment:
-          Variables:
-              MAYA_PAYMENT_PARAMETER_STORE_PATH: '/MayaPayment/api'
-              MAYA_PAYMENT_ROOT_URL: 'https://pg-sandbox.paymaya.com'
-              CREATE_CHECKOUT_CONTEXT_PATH: '/checkout/v1/checkouts'
-              AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
-              AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
-              POWERTOOLS_LOG_LEVEL: ERROR,INFO
-      Events:
-        Decrypt:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /kahoona/test/post
-            Method: POST
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: es2020
-        Sourcemap: true
-        EntryPoints:
-          - KahoonaServiceApp.ts
+  # FullQuoteFunction:
+  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  #   Properties:
+  #     CodeUri: kahoona-service/
+  #     Handler: KahoonaServiceApp.fullQuoteHandler
+  #     Runtime: nodejs20.x
+  #     Layers: 
+  #         - !Ref MyLayer
+  #     Architectures:
+  #       - x86_64
+  #     MemorySize: 512
+  #     Environment:
+  #         Variables:
+  #             KAHOONA_BASE_URL: 'https://www.toptal.com'
+  #             FULL_QUOTE_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-full-quote'
+  #             AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
+  #             AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
+  #             POWERTOOLS_LOG_LEVEL: ERROR,INFO
+  #     Events:
+  #       Decrypt:
+  #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+  #         Properties:
+  #           Path: /kahoona/fullQuote
+  #           Method: POST
+  #   Metadata: # Manage esbuild properties
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       Minify: true
+  #       Target: es2020
+  #       Sourcemap: true
+  #       EntryPoints:
+  #         - KahoonaServiceApp.ts
+  # SyncPaymentFunction:
+  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  #   Properties:
+  #     CodeUri: kahoona-service/
+  #     Handler: KahoonaServiceApp.syncPaymentHandler
+  #     Runtime: nodejs20.x
+  #     Layers: 
+  #         - !Ref MyLayer
+  #     Architectures:
+  #       - x86_64
+  #     MemorySize: 512
+  #     Environment:
+  #         Variables:
+  #             KAHOONA_BASE_URL: 'https://www.toptal.com'
+  #             DECRYPT_SVC_ENDPOINT: '/developers/postbin/api/bin'
+  #             SYNC_PAYMENT_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-payment'
+  #             AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
+  #             AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
+  #             POWERTOOLS_LOG_LEVEL: ERROR,INFO
+  #     Events:
+  #       Decrypt:
+  #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+  #         Properties:
+  #           Path: /kahoona/syncPayment
+  #           Method: POST
+  #   Metadata: # Manage esbuild properties
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       Minify: true
+  #       Target: es2020
+  #       Sourcemap: true
+  #       EntryPoints:
+  #         - KahoonaServiceApp.ts
+  # SyncPolicyFunction:
+  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  #   Properties:
+  #     CodeUri: kahoona-service/
+  #     Handler: KahoonaServiceApp.syncPolicyHandler
+  #     Runtime: nodejs20.x
+  #     Layers: 
+  #         - !Ref MyLayer
+  #     Architectures:
+  #       - x86_64
+  #     MemorySize: 512
+  #     Environment:
+  #         Variables:
+  #             KAHOONA_BASE_URL: 'https://www.toptal.com'
+  #             SYNC_POLICY_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-policy'
+  #             AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
+  #             AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
+  #             POWERTOOLS_LOG_LEVEL: ERROR,INFO
+  #     Events:
+  #       Decrypt:
+  #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+  #         Properties:
+  #           Path: /kahoona/syncPolicy
+  #           Method: POST
+  #   Metadata: # Manage esbuild properties
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       Minify: true
+  #       Target: es2020
+  #       Sourcemap: true
+  #       EntryPoints:
+  #         - KahoonaServiceApp.ts
+  # GetFunction:
+  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  #   Properties:
+  #     CodeUri: kahoona-service/
+  #     Handler: KahoonaServiceApp.getHandler
+  #     Runtime: nodejs20.x
+  #     Layers: 
+  #         - !Ref MyLayer
+  #     Architectures:
+  #       - x86_64
+  #     MemorySize: 512
+  #     Environment:
+  #         Variables:
+  #             DECRYPT_SVC_ENDPOINT: '/developers/postbin/api/bin'
+  #             QUICK_QUOTE_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-quick-quote'
+  #             FULL_QUOTE_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-full-quote'
+  #             SYNC_PAYMENT_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-payment'
+  #             SYNC_POLICY_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-policy'
+  #             AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
+  #             AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
+  #             POWERTOOLS_LOG_LEVEL: ERROR,INFO
+  #     Events:
+  #       Decrypt:
+  #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+  #         Properties:
+  #           Path: /kahoona/test/get
+  #           Method: get
+  #   Metadata: # Manage esbuild properties
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       Minify: true
+  #       Target: es2020
+  #       Sourcemap: true
+  #       EntryPoints:
+  #         - KahoonaServiceApp.ts
+  # PostFunction:
+  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  #   Properties:
+  #     CodeUri: kahoona-service/
+  #     Handler: KahoonaServiceApp.postHandler
+  #     Runtime: nodejs20.x
+  #     Layers: 
+  #         - !Ref MyLayer
+  #     Architectures:
+  #       - x86_64
+  #     MemorySize: 512
+  #     Environment:
+  #         Variables:
+  #             KAHOONA_BASE_URL: 'https://www.toptal.com'
+  #             DECRYPT_SVC_ENDPOINT: '/developers/postbin/api/bin'
+  #             QUICK_QUOTE_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-quick-quote'
+  #             FULL_QUOTE_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-full-quote'
+  #             SYNC_PAYMENT_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-payment'
+  #             SYNC_POLICY_SVC_ENDPOINT: '/sdx-api/secure/aem/sync-policy'
+  #             AUTH_USERNAME: 'pk-PTM6nsArhkGCuCC9DSNbfpAm0hLbWkUBO9lcTTyfyVh'
+  #             AUTH_PASSWORD: 'sk-BKpWvp2NaueGRt1OGOsYNUOOiuKbM4p5o3fWObZAwaT'
+  #             POWERTOOLS_LOG_LEVEL: ERROR,INFO
+  #     Events:
+  #       Decrypt:
+  #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+  #         Properties:
+  #           Path: /kahoona/test/post
+  #           Method: POST
+  #   Metadata: # Manage esbuild properties
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       Minify: true
+  #       Target: es2020
+  #       Sourcemap: true
+  #       EntryPoints:
+  #         - KahoonaServiceApp.ts
   
   # HelloWorldFunction:
   #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
