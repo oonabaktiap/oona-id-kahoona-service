@@ -7,7 +7,7 @@
   "author": "oona",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --external:/opt/nodejs/kahoonaService  --outfile=dist/index.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest"

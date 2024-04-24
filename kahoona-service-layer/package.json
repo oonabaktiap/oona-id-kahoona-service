@@ -7,7 +7,7 @@
   "author": "oona",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "esbuild kahoonaService.ts --bundle --minify --sourcemap --platform=node --target=es2020 --external:/opt/nodejs/loggerUtil --external:/opt/nodejs/loggingAspect --external:/opt/nodejs/httpClient  --external:/opt/nodejs/ssm-secret-layer --outfile=dist/nodejs/kahoonaService.js",
     "start": "node build/src/KahoonaServiceApp.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
