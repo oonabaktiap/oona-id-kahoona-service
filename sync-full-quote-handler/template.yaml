@@ -18,12 +18,14 @@ Globals:
     TracingEnabled: true
 Resources:
   KahoonaServiceLayer:
-        Type: AWS::Serverless::LayerVersion
-        Properties:
-            ContentUri: ../kahoona-service-layer/
-            RetentionPolicy: Retain
-            CompatibleRuntimes:
-                - nodejs20.x
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+        ContentUri: ../kahoona-service-layer/
+        RetentionPolicy: Retain
+        CompatibleRuntimes:
+            - nodejs20.x
+    Metadata: # Manage esbuild properties
+      BuildMethod: nodejs20.x
   SyncQuickQuoteFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:

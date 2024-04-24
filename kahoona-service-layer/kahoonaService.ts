@@ -44,12 +44,12 @@ class KahoonaService {
         try {
             // Make an API call during initialization
             if (!cachedKahoonaApiDetails) {
-                const parameterResult = await getListOfParameterStoreService(KAHOONA_SSM_PARAMETER_PATH);
-                logger.info(`cachedParameterValue --> `, { cachedParameterValue: parameterResult });
+                // const parameterResult = await getListOfParameterStoreService(KAHOONA_SSM_PARAMETER_PATH);
+                // logger.info(`cachedParameterValue --> `, { cachedParameterValue: parameterResult });
                 cachedKahoonaApiDetails = {} as KahoonaApiDetails;
                 cachedKahoonaApiDetails.API_ROOT_URL = URL_PATH_CONSTANTS.KAHOONA_BASE_URL || '';
-                cachedKahoonaApiDetails.AUTH_USERNAME = parameterResult?.AUTH_USERNAME || '';
-                cachedKahoonaApiDetails.AUTH_PASSWORD = parameterResult?.AUTH_PASSWORD || '';
+                // cachedKahoonaApiDetails.AUTH_USERNAME = parameterResult?.AUTH_USERNAME || '';
+                // cachedKahoonaApiDetails.AUTH_PASSWORD = parameterResult?.AUTH_PASSWORD || '';
 
 
                 kahoonaHttpClient = new HttpClient(cachedKahoonaApiDetails?.API_ROOT_URL);
