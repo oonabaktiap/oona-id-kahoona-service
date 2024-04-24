@@ -7,8 +7,8 @@ import HttpClient from "/opt/nodejs/httpClient";
 import { createLogger } from "/opt/nodejs/loggerUtil";
 import { BaseResponse } from "src/dto/oona.base.response.dto";
 import { ApiRequestPayload } from "src/dto/common-api-request-payload.dto";
-import { DecryptRequestDto } from "src/dto/request/decrypt-request.dto";
 import { loggingAspectClass } from "/opt/nodejs/loggingAspect";
+import {getListOfParameterStoreService} from '/opt/nodejs/parameter-store';
 import { createEventFn } from "src/service/event-bridge-common.service";
 import { QuickQuoteRequestDto } from "src/dto/request/quick-quote-request.dto";
 
@@ -21,10 +21,8 @@ interface KahoonaApiDetails {
 }
 
 const KAHOONA_SSM_PARAMETER_PATH = process.env.KAHOONA_SSM_PARAMETER_PATH;
-// const KAHOONA_BASE_URL = process.env.KAHOONA_BASE_URL;
 
 const URL_PATH_CONSTANTS = {
-    DECRYPT_SVC_CONTEXT_PATH: process.env.DECRYPT_SVC_CONTEXT_PATH,
     KAHOONA_BASE_URL: process.env.KAHOONA_BASE_URL,
 
     DECRYPT_SVC_ENDPOINT: process.env.DECRYPT_SVC_ENDPOINT,
@@ -46,12 +44,12 @@ class KahoonaService {
         try {
             // Make an API call during initialization
             if (!cachedKahoonaApiDetails) {
-                // const parameterResult = await getListOfParameterStoreService(KAHOONA_SSM_PARAMETER_PATH);
-                // logger.info(`cachedParameterValue --> `, { cachedParameterValue: parameterResult });
+                const parameterResult = await getListOfParameterStoreService(KAHOONA_SSM_PARAMETER_PATH);
+                logger.info(`cachedParameterValue --> `, { cachedParameterValue: parameterResult });
                 cachedKahoonaApiDetails = {} as KahoonaApiDetails;
                 cachedKahoonaApiDetails.API_ROOT_URL = URL_PATH_CONSTANTS.KAHOONA_BASE_URL || '';
-                // cachedKahoonaApiDetails.AUTH_USERNAME = parameterResult?.AUTH_USERNAME || '';
-                // cachedKahoonaApiDetails.AUTH_PASSWORD = parameterResult?.AUTH_PASSWORD || '';
+                cachedKahoonaApiDetails.AUTH_USERNAME = parameterResult?.AUTH_USERNAME || '';
+                cachedKahoonaApiDetails.AUTH_PASSWORD = parameterResult?.AUTH_PASSWORD || '';
 
 
                 kahoonaHttpClient = new HttpClient(cachedKahoonaApiDetails?.API_ROOT_URL);
