@@ -114,7 +114,7 @@ class KahoonaService {
                 await this.apiCallInitialization();
             }
             const apiRequestPayload: ApiRequestPayload = new ApiRequestPayload();
-            await this.assignAnyToObject(apiRequestPayload, event.body);
+            await this.assignAnyToObject(apiRequestPayload, event.detail.body);
             const quickQuoteRequest: QuickQuoteRequestDto = new QuickQuoteRequestDto();
             await this.assignAnyToObject(quickQuoteRequest, apiRequestPayload.apiRequest);
 
@@ -151,7 +151,7 @@ class KahoonaService {
                 await this.apiCallInitialization();
             }
             const apiRequestPayload: ApiRequestPayload = new ApiRequestPayload();
-            await this.assignAnyToObject(apiRequestPayload, event.body);
+            await this.assignAnyToObject(apiRequestPayload, event.detail.body);
 
             const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
             commonRestCallDto.requestPayload = apiRequestPayload;
@@ -204,7 +204,7 @@ class KahoonaService {
                 await this.apiCallInitialization();
             }
             const apiRequestPayload: ApiRequestPayload = new ApiRequestPayload();
-            await this.assignAnyToObject(apiRequestPayload, event.body);
+            await this.assignAnyToObject(apiRequestPayload, event.detail.body);
 
             const commonRestCallDto: CommonRestCallDto = new CommonRestCallDto();
             commonRestCallDto.requestPayload = apiRequestPayload;
